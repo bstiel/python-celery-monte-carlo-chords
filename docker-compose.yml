@@ -1,0 +1,45 @@
+version: '3.5'
+services:
+  app:
+    build: ./
+    image: &app app
+    restart: "no"
+    command: ["python", "app.py"]
+    environment: &env
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - FLOWER_BROKER=redis://redis:6379/0
+
+    ports:
+      - 8000:5000
+    volumes:
+      - ./app:/app
+    depends_on:
+      - redis
+
+  worker:
+    image: *app
+    restart: "no"
+    environment: *env
+    command: ["celery", "worker", "--app=worker.app", "--concurrency=1", "--hostname=worker@%h", "--loglevel=INFO"]
+    volumes:
+      - ./app:/app
+    depends_on:
+      - redis
+    
+  flower:
+    image: zoomeranalytics/flower:0.9.1-4.0.2
+    restart: "no"
+    environment: *env
+    ports:
+      - 5555:5555
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:4
+    environment: *env
+    ports:
+      - 6379:6379
