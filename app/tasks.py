@@ -34,6 +34,7 @@ def up_and_out_call(self, s0, strike, T, r, sigma, barrier, n_simulation, n_step
             sT *= scipy.exp((r - 0.5 * sigma * sigma) * dt + sigma * e * scipy.sqrt(dt))
             if sT > barrier:
                 out = True
+                break
         if out == False:
             total += bs_call(s0, strike, T, r, sigma)
     return total / n_simulation
